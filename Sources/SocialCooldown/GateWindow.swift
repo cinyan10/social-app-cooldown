@@ -70,32 +70,52 @@ struct GateView: View {
 }
 
 @MainActor
-final class GateWindowController: NSWindowController, NSWindowDelegate {
+final class GateWindowController: NSObject, NSWindowDelegate {
     static let shared = GateWindowController()
+    private var gateWindow: NSWindow?
 
-    private init() { super.init(window: nil) }
-    required init?(coder: NSCoder) { super.init(coder: coder) }
+    private override init() { super.init() }
 
     func show(session: GateSession, model: AppModel) {
-        // Replace any previous gate window so a repeated blocked launch cannot
-        // leave an old challenge screen visible underneath the new session.
-        if let previousWindow = window {
-            previousWindow.delegate = nil
-            previousWindow.close()
-            window = nil
-        }
+        DiagnosticLog.write("show gate window app=\(session.app.rawValue) challengeSession=\(session.id)")
         let view = GateView(session: session, model: model)
-        let window = NSWindow(contentViewController: NSHostingController(rootView: view))
-        window.title = "Social Cooldown"
-        window.styleMask = [.titled, .closable]
-        window.isReleasedWhenClosed = false
-        window.delegate = self
-        self.window = window
+        let hostingController = NSHostingController(rootView: view)
+        let visibleWindow: NSWindow
+        if let existingWindow = gateWindow {
+            existingWindow.contentViewController = hostingController
+            visibleWindow = existingWindow
+            DiagnosticLog.write("updated gate window number=\(existingWindow.windowNumber) app=\(session.app.rawValue)")
+        } else {
+            // Remove any visible gate that AppKit may have detached from a
+            // previous controller reference before creating the sole window.
+            for staleWindow in NSApp.windows where staleWindow.title == "Social Cooldown" {
+                staleWindow.delegate = nil
+                staleWindow.close()
+                DiagnosticLog.write("closed orphan gate window number=\(staleWindow.windowNumber)")
+            }
+            let newWindow = NSWindow(contentViewController: hostingController)
+            newWindow.title = "Social Cooldown"
+            newWindow.styleMask = [.titled, .closable]
+            newWindow.isReleasedWhenClosed = false
+            newWindow.delegate = self
+            gateWindow = newWindow
+            visibleWindow = newWindow
+            DiagnosticLog.write("created gate window number=\(newWindow.windowNumber) app=\(session.app.rawValue)")
+        }
         NSApp.activate(ignoringOtherApps: true)
-        window.center()
-        window.makeKeyAndOrderFront(nil)
+        visibleWindow.center()
+        visibleWindow.makeKeyAndOrderFront(nil)
     }
 
-    static func close() { shared.window?.close() }
-    func windowWillClose(_ notification: Notification) { window = nil }
+    func close() {
+        gateWindow?.close()
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        guard let closingWindow = notification.object as? NSWindow else { return }
+        DiagnosticLog.write("gate window closing number=\(closingWindow.windowNumber) tracked=\(closingWindow === gateWindow)")
+        if closingWindow === gateWindow {
+            gateWindow = nil
+        }
+    }
 }

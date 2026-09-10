@@ -13,9 +13,11 @@ final class AppModel: ObservableObject {
     @Published var quitConfirmationPresented = false
 
     init(store: CooldownStore = CooldownStore()) {
+        DiagnosticLog.reset()
         self.store = store
         let saved = UserDefaults.standard.dictionary(forKey: "bundleIdentifiers") as? [String: String] ?? [:]
         bundleIdentifiers = Dictionary(uniqueKeysWithValues: SocialApp.allCases.map { ($0, saved[$0.rawValue] ?? $0.defaultBundleIdentifier) })
+        DiagnosticLog.write("configured identifiers discord=\(bundleIdentifiers[.discord] ?? "nil") qq=\(bundleIdentifiers[.qq] ?? "nil")")
         monitor = ProcessMonitor(store: store, model: self)
         monitor.start()
     }
@@ -55,6 +57,7 @@ final class AppModel: ObservableObject {
         // Every blocked launch gets a fresh session. The challenge therefore
         // remains hidden until the user explicitly presses Continue again.
         let session = GateSession(app: app, lastQuit: lastQuit)
+        DiagnosticLog.write("present gate app=\(app.rawValue) lastQuit=\(lastQuit.timeIntervalSince1970) replacing=\(gate?.app.rawValue ?? "none")")
         gate = session
         session.beginWait()
         GateWindowController.shared.show(session: session, model: self)
