@@ -22,11 +22,9 @@ struct SocialCooldownApp: App {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Button("Reset \(app.displayName) cooldown") { model.reset(app) }
             }
             Divider()
             Button("Application identifiers…") { SettingsWindowController.shared.show(model: model) }
-            Button("Reset all cooldowns") { model.resetAll() }
             Button("Quit Social Cooldown") { appDelegate.requestQuit() }
         }
         .menuBarExtraStyle(.menu)

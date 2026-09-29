@@ -28,7 +28,7 @@ struct GateView: View {
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-                TextField("20-character challenge", text: $session.input)
+                TextField("10-character challenge", text: $session.input)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit { model.submit(session) }
             } else {

@@ -18,7 +18,7 @@ final class CooldownTests: XCTestCase {
     func testChallengeShapeAndExactMatch() {
         var generator = SystemRandomNumberGenerator()
         let challenge = ChallengeGenerator.make(using: &generator)
-        XCTAssertEqual(challenge.count, 20)
+        XCTAssertEqual(challenge.count, 10)
         XCTAssertTrue(challenge.allSatisfy { ChallengeGenerator.alphabet.contains($0) })
     }
 
@@ -36,7 +36,7 @@ final class CooldownTests: XCTestCase {
 
     @MainActor
     func testChallengeIsHiddenUntilExplicitlyRevealed() {
-        let session = GateSession(app: .discord, lastQuit: .now, challenge: "abcdefghijklmnopqrst")
+        let session = GateSession(app: .discord, lastQuit: .now, challenge: "abcdefghij")
         XCTAssertFalse(session.challengeRevealed)
         XCTAssertFalse(session.canContinue)
         session.revealChallenge()

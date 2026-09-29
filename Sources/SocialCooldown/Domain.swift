@@ -75,12 +75,12 @@ enum CooldownPolicy {
 struct ChallengeGenerator {
     static let alphabet = Array("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-    static func make(length: Int = 20) -> String {
+    static func make(length: Int = 10) -> String {
         var generator = SystemRandomNumberGenerator()
         return make(length: length, using: &generator)
     }
 
-    static func make(length: Int = 20, using generator: inout SystemRandomNumberGenerator) -> String {
+    static func make(length: Int = 10, using generator: inout SystemRandomNumberGenerator) -> String {
         String((0..<length).map { _ in alphabet.randomElement(using: &generator)! })
     }
 }
